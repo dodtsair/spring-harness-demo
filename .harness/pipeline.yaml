@@ -1,0 +1,47 @@
+pipeline:
+  name: Spring Harness Demo CI
+  identifier: SpringHarnessDemoCI
+  projectIdentifier: YOUR_PROJECT_ID
+  orgIdentifier: YOUR_ORG_ID
+  tags: {}
+  stages:
+    - stage:
+        name: Build APK and Project
+        identifier: BuildApkAndProject
+        type: CI
+        spec:
+          cloneCodebase: true
+          platform:
+            os: Linux
+            arch: Amd64
+          runtime:
+            type: Cloud
+            spec: {}
+          execution:
+            steps:
+              - step:
+                  type: Run
+                  name: Build meta-package with Melange
+                  identifier: MelangeBuild
+                  spec:
+                    shell: sh
+                    image: cgr.dev/chainguard/melange:latest
+                    command: |
+                      set -euxo pipefail
+                      melange version || true
+                      # Build an amd64 package to match the CI platform
+                      melange build melange.yaml --arch x86_64
+                      ls -R packages || true
+              - step:
+                  type: Run
+                  name: Install meta-package and build project
+                  identifier: InstallAndBuild
+                  spec:
+                    shell: sh
+                    image: cgr.dev/chainguard/wolfi-base:latest
+                    command: |
+                      set -euxo pipefail
+                      # Install the locally-built meta-package; apk will pull runtime deps from Wolfi repos
+                      apk add --no-cache ./packages/x86_64/spring-harness-demo-build-deps-*.apk
+                      ./gradlew --version
+                      ./gradlew build

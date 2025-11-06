@@ -1,0 +1,15 @@
+[tools]
+# Match Gradle toolchain: Java 25
+java = "temurin-25"
+
+# Optional: match the Gradle wrapper distribution
+# Not required if you always use ./gradlew, but useful for global gradle usage
+gradle = "8.14.3"
+"ubi:chainguard-dev/melange" = "v0.32.0"
+
+[tasks.build]
+run = "./gradlew build"
+
+[tasks.test]
+run = "./gradlew test"
+
