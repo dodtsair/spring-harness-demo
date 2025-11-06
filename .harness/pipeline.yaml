@@ -7,7 +7,7 @@ pipeline:
   properties:
     ci:
       codebase:
-        connectorRef: account.myGithubConnector   # your org/account-scoped connector
+        connectorRef: account.Github_OAuth_1762468233345   # your org/account-scoped connector
         repoName: dodtsair/spring-harness-demo                  # set once per pipeline
         # Let triggers (or manual runs) pick the ref:
         build:
