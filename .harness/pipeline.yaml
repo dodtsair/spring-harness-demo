@@ -5,12 +5,12 @@ pipeline:
   orgIdentifier: default
   tags: {}
   properties:
-  ci:
-    codebase:
-      connectorRef: account.myGithubConnector   # your org/account-scoped connector
-      repoName: dodtsair/spring-harness-demo                  # set once per pipeline
-      # Let triggers (or manual runs) pick the ref:
-      build: main
+    ci:
+      codebase:
+        connectorRef: account.myGithubConnector   # your org/account-scoped connector
+        repoName: dodtsair/spring-harness-demo                  # set once per pipeline
+        # Let triggers (or manual runs) pick the ref:
+        build: main
   stages:
     - stage:
         name: Build APK and Project
