@@ -13,7 +13,8 @@ pipeline:
         build:
           type: branch
           spec:
-            branch: main  stages:
+            branch: main  
+  stages:
     - stage:
         name: Build APK and Project
         identifier: BuildApkAndProject
