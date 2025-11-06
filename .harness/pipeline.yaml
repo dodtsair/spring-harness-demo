@@ -34,7 +34,7 @@ pipeline:
                   name: Build meta-package with Melange
                   identifier: MelangeBuild
                   spec:
-                    shell: Bash
+                    shell: Sh
                     image: cgr.dev/chainguard/melange:latest
                     command: |
                       set -euxo pipefail
@@ -47,7 +47,7 @@ pipeline:
                   name: Install meta-package and build project
                   identifier: InstallAndBuild
                   spec:
-                    shell: Bash
+                    shell: Sh
                     image: cgr.dev/chainguard/wolfi-base:latest
                     command: |
                       set -euxo pipefail
