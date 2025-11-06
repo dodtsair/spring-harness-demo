@@ -1,8 +1,8 @@
 pipeline:
   name: Spring Harness Demo CI
   identifier: SpringHarnessDemoCI
-  projectIdentifier: YOUR_PROJECT_ID
-  orgIdentifier: YOUR_ORG_ID
+  projectIdentifier: spring-harness-demo
+  orgIdentifier: default
   tags: {}
   stages:
     - stage:
