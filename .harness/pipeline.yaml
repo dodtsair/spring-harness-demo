@@ -34,14 +34,14 @@ pipeline:
                   name: Build meta-package with Melange
                   identifier: MelangeBuild
                   spec:
-                    shell: Sh
                     image: cgr.dev/chainguard/melange:latest
-                    command: |
-                      set -euxo pipefail
-                      melange version || true
-                      # Build an amd64 package to match the CI platform
-                      melange build melange.yaml --arch x86_64
-                      ls -R packages || true
+                    entrypoint:
+                      - melange
+                    args:
+                      - build
+                      - melange.yaml
+                      - --arch
+                      - x86_64
               - step:
                   type: Run
                   name: Install meta-package and build project
