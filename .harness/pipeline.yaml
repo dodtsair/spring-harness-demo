@@ -38,7 +38,7 @@ pipeline:
                     # docker run --privileged --rm -v "${PWD}":/work   cgr.dev/chainguard/melange version 
                     # image: cgr.dev/chainguard/melange:latest
                     shell: Sh
-                    command: docker run --privileged --rm -v "${PWD}":/work   cgr.dev/chainguard/melange version 
+                    command: docker run --privileged --rm -v "${PWD}":/work   cgr.dev/chainguard/melange build melange.yaml --arch amd64,aarch64 
               - step:
                   type: Run
                   name: Install meta-package and build project
