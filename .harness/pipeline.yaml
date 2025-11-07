@@ -56,5 +56,9 @@ pipeline:
                       apk update || true
                       # Install the locally-built meta-package; apk will pull runtime deps from Wolfi repos
                       apk add --no-cache ./packages/x86_64/spring-harness-demo-build-deps-*.apk
+                      # Make the JDK discoverable to Gradle toolchains
+                      export JAVA_HOME="/usr/lib/jvm/java-21-openjdk"
+                      export PATH="$JAVA_HOME/bin:$PATH"
+                      java -version
                       ./gradlew --version
                       ./gradlew build

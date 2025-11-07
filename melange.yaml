@@ -6,11 +6,6 @@ package:
  
   dependencies:
     runtime:
-      - openjdk-21-jdk
+      - openjdk-21-default-jvm
       - gradle
-
-# environment:
-#   contents:
-#     packages:
-#       - busybox
 
