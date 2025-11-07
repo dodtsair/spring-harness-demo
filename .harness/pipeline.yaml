@@ -39,6 +39,7 @@ pipeline:
                     image: cgr.dev/chainguard/melange:latest
                     entrypoint:
                       - melange 
+                    args: 
                       - version
               - step:
                   type: Run
