@@ -38,7 +38,11 @@ pipeline:
                     # docker run --privileged --rm -v "${PWD}":/work   cgr.dev/chainguard/melange version 
                     # image: cgr.dev/chainguard/melange:latest
                     shell: Sh
-                    command: docker run --privileged --rm -v "${PWD}":/work   cgr.dev/chainguard/melange build melange.yaml --arch amd64,aarch64 
+                    command: |
+                      pushd packages
+                      docker run --rm -v "${PWD}":/work cgr.dev/chainguard/melange keygen
+                      popd
+                      docker run --privileged --rm -v "${PWD}":/work   cgr.dev/chainguard/melange build melange.yaml --arch amd64,aarch64 --signing-key /work/packages/melange.rsa
               - step:
                   type: Run
                   name: Install meta-package and build project
@@ -61,6 +65,9 @@ pipeline:
                       ls -la /workspace/packages || true
                       echo "Triage: recursive listing from CWD to locate packages"
                       ls -R . || true
+                      # Trust the generated melange public key so apk can verify the package
+                      cp ./packages/melange.rsa.pub /etc/apk/keys/
+                      apk update || true
                       # Install the locally-built meta-package; apk will pull runtime deps from Wolfi repos
                       apk add --no-cache ./packages/x86_64/spring-harness-demo-build-deps-*.apk
                       ./gradlew --version
