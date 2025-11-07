@@ -36,13 +36,7 @@ pipeline:
                   spec:
                     image: cgr.dev/chainguard/melange:latest
                     # ⚠️ FIX: Use the full path /usr/bin/melange 
-                    entrypoint:
-                      - /usr/bin/melange 
-                    args:
-                      - build
-                      - melange.yaml
-                      - --arch
-                      - x86_64
+                    script: /usr/bin/melange build melange.yaml --arch x86_64
               - step:
                   type: Run
                   name: Install meta-package and build project
