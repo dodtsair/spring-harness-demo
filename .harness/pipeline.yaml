@@ -30,11 +30,12 @@ pipeline:
           execution:
             steps:
               - step:
-                  type: Run
+                  type: 
                   name: Check Melange Version
                   identifier: MelangeVersionCheck
                   spec:
                     # 1. Use the Melange builder image as the base for this step
+                    # docker run --privileged --rm -v "${PWD}":/work   cgr.dev/chainguard/melange version 
                     image: cgr.dev/chainguard/melange:latest
                     thisisignoredandnotvalidated: melangeversion
               - step:
