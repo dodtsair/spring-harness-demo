@@ -35,9 +35,14 @@ pipeline:
                   identifier: MelangeBuild
                   spec:
                     image: cgr.dev/chainguard/melange:latest
-                    shell: Sh # Specify a shell, even if not present, Harness may handle it
-                    command: |
-                      melange build melange.yaml --arch x86_64
+                    # ⚠️ FIX: Use the full path /usr/bin/melange 
+                    entrypoint:
+                      - /usr/bin/melange 
+                    args:
+                      - build
+                      - melange.yaml
+                      - --arch
+                      - x86_64
               - step:
                   type: Run
                   name: Install meta-package and build project
