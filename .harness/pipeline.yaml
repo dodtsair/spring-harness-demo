@@ -51,6 +51,19 @@ pipeline:
                     image: cgr.dev/chainguard/wolfi-base:latest
                     command: |
                       set -euxo pipefail
+                      echo "Triage: current working directory and contents"
+                      pwd
+                      ls -la
+                      echo "Triage: check common package locations"
+                      ls -la ./packages || true
+                      ls -la ./packages/x86_64 || true
+                      ls -la /harness || true
+                      ls -la /harness/packages || true
+                      ls -la /harness/packages/x86_64 || true
+                      ls -la /workspace || true
+                      ls -la /workspace/packages || true
+                      echo "Triage: recursive listing from CWD to locate packages"
+                      ls -R . || true
                       # Install the locally-built meta-package; apk will pull runtime deps from Wolfi repos
                       apk add --no-cache ./packages/x86_64/spring-harness-demo-build-deps-*.apk
                       ./gradlew --version
