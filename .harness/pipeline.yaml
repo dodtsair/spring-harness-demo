@@ -37,7 +37,7 @@ pipeline:
                     # 1. Use the Melange builder image as the base for this step
                     image: cgr.dev/chainguard/melange:latest
                     
-                    args: ["version"]
+                    script: version
               - step:
                   type: Run
                   name: Install meta-package and build project
