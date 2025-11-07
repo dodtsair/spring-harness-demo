@@ -31,12 +31,13 @@ pipeline:
             steps:
               - step:
                   type: Run
-                  name: Build meta-package with Melange
-                  identifier: MelangeBuild
+                  name: Check Melange Version (Args Method)
+                  identifier: MelangeVersionCheck
                   spec:
+                    # 1. Use the Melange builder image as the base for this step
                     image: cgr.dev/chainguard/melange:latest
-                    # ⚠️ FIX: Use the full path /usr/bin/melange 
-                    script: /usr/bin/melange build melange.yaml --arch x86_64
+                    
+                    args: ["version"]
               - step:
                   type: Run
                   name: Install meta-package and build project
