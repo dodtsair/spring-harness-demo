@@ -1,6 +1,6 @@
 [tools]
-# Match Gradle toolchain: Java 25
-java = "temurin-25"
+# Match pipeline/toolchain: Java 21 (LTS)
+java = "temurin-21"
 
 # Optional: match the Gradle wrapper distribution
 # Not required if you always use ./gradlew, but useful for global gradle usage

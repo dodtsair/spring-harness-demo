@@ -6,7 +6,7 @@ package:
  
   dependencies:
     runtime:
-      - openjdk-25-default-jvm
+      - openjdk-21-default-jvm
       - gradle
 
 # environment:
