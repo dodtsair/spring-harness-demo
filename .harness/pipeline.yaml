@@ -37,12 +37,12 @@ pipeline:
                     # 1. Use the Melange builder image as the base for this step
                     # docker run --privileged --rm -v "${PWD}":/work   cgr.dev/chainguard/melange version 
                     # image: cgr.dev/chainguard/melange:latest
-                    shell: Sh
                     command: |
-                      pushd packages
-                      docker run --rm -v "${PWD}":/work cgr.dev/chainguard/melange keygen
-                      popd
-                      docker run --privileged --rm -v "${PWD}":/work   cgr.dev/chainguard/melange build melange.yaml --arch amd64,aarch64 --signing-key /work/packages/melange.rsa
+                      cd packages
+                      docker run --rm -v "${PWD}":/work \
+                        cgr.dev/chainguard/melange keygen 
+                      cd ..
+                      docker run --privileged --rm -v "${PWD}":/work   cgr.dev/chainguard/melange build melange.yaml --arch amd64,aarch64 --signing-key packages/melange.rsa
               - step:
                   type: Run
                   name: Install meta-package and build project
@@ -51,20 +51,6 @@ pipeline:
                     shell: Sh
                     image: cgr.dev/chainguard/wolfi-base:latest
                     command: |
-                      set -euxo pipefail
-                      echo "Triage: current working directory and contents"
-                      pwd
-                      ls -la
-                      echo "Triage: check common package locations"
-                      ls -la ./packages || true
-                      ls -la ./packages/x86_64 || true
-                      ls -la /harness || true
-                      ls -la /harness/packages || true
-                      ls -la /harness/packages/x86_64 || true
-                      ls -la /workspace || true
-                      ls -la /workspace/packages || true
-                      echo "Triage: recursive listing from CWD to locate packages"
-                      ls -R . || true
                       # Trust the generated melange public key so apk can verify the package
                       cp ./packages/melange.rsa.pub /etc/apk/keys/
                       apk update || true
