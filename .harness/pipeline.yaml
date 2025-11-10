@@ -50,11 +50,13 @@ pipeline:
                       fi
                       IMAGE_REPO="<+pipeline.identifier>/<+stage.identifier>"
                       IMAGE_REF="${IMAGE_REPO}:$TAG"
+                      # assign shell variables used by the Harness engine when exporting
+                      CONTENT_TAG="$TAG"
                       echo "CONTENT_TAG=$TAG"
                       echo "IMAGE_REPO=$IMAGE_REPO"
                       echo "IMAGE_REF=$IMAGE_REF"
                       # export for Harness output variables
-                      echo "export CONTENT_TAG=$TAG"
+                      echo "export CONTENT_TAG=$CONTENT_TAG"
                       echo "export IMAGE_REPO=$IMAGE_REPO"
                       echo "export IMAGE_REF=$IMAGE_REF"
                     outputVariables:
