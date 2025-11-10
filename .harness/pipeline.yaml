@@ -16,8 +16,8 @@ pipeline:
             branch: main  
   stages:
     - stage:
-        name: Build APK and Project
-        identifier: BuildApkAndProject
+        name: Build Project
+        identifier: BuildProject
         type: CI
         spec:
           cloneCodebase: true
@@ -31,31 +31,144 @@ pipeline:
             steps:
               - step:
                   type: Run
-                  name: Check Melange Version
-                  identifier: MelangeVersionCheck
+                  name: Compute image tag and ref
+                  identifier: ComputeImageTag
                   spec:
-                    # 1. Use the Melange builder image as the base for this step
-                    # docker run --privileged --rm -v "${PWD}":/work   cgr.dev/chainguard/melange version 
-                    # image: cgr.dev/chainguard/melange:latest
+                    shell: Sh
                     command: |
-                      cd packages
-                      docker run --rm -v "${PWD}":/work \
-                        cgr.dev/chainguard/melange keygen 
-                      cd ..
-                      docker run --privileged --rm -v "${PWD}":/work   cgr.dev/chainguard/melange build melange.yaml --arch amd64,aarch64 --signing-key packages/melange.rsa
+                      set -euo pipefail
+                      if TREE=$(git rev-parse -q --verify HEAD:.harness/BuildProject 2>/dev/null); then
+                        TAG=$(git rev-parse --short=16 "$TREE")
+                      else
+                        TAG=nohash
+                      fi
+                      IMAGE_REPO="<+pipeline.identifier>/<+stage.identifier>"
+                      IMAGE_REF="${IMAGE_REPO}:$TAG"
+                      echo "CONTENT_TAG=$TAG"
+                      echo "IMAGE_REPO=$IMAGE_REPO"
+                      echo "IMAGE_REF=$IMAGE_REF"
+                      # export for Harness output variables
+                      echo "export CONTENT_TAG=$TAG"
+                      echo "export IMAGE_REPO=$IMAGE_REPO"
+                      echo "export IMAGE_REF=$IMAGE_REF"
+                    outputVariables:
+                      - name: CONTENT_TAG
+                      - name: IMAGE_REPO
+                      - name: IMAGE_REF
+              - step:
+                  type: Run
+                  name: Detect melange config
+                  identifier: DetectMelange
+                  spec:
+                    shell: Sh
+                    command: |
+                      set -euo pipefail
+                      if [ -f .harness/BuildProject/melange.yaml ]; then
+                        echo "export MELANGE_PRESENT=1"
+                      else
+                        echo "export MELANGE_PRESENT=0"
+                      fi
+                    outputVariables:
+                      - name: MELANGE_PRESENT
+              - step:
+                  type: Run
+                  name: Check if image exists
+                  identifier: CheckImageExists
+                  spec:
+                    shell: Sh
+                    command: |
+                      set -euo pipefail
+                      IMAGE_REF="<+execution.steps.ComputeImageTag.output.outputVariables.IMAGE_REF>"
+                      echo "Probing image: $IMAGE_REF"
+                      if docker manifest inspect "$IMAGE_REF" >/dev/null 2>&1; then
+                        echo "export IMAGE_EXISTS=1"
+                      else
+                        echo "export IMAGE_EXISTS=0"
+                      fi
+                    outputVariables:
+                      - name: IMAGE_EXISTS
+              - step:
+                  type: Run
+                  name: Conditional Melange build
+                  identifier: ConditionalMelangeBuild
+                  when:
+                    condition: <+execution.steps.DetectMelange.output.outputVariables.MELANGE_PRESENT> == "1" && <+execution.steps.CheckImageExists.output.outputVariables.IMAGE_EXISTS> == "0"
+                  spec:
+                    shell: Sh
+                    command: |
+                      set -euo pipefail
+                      if [ -f .harness/BuildProject/melange.yaml ]; then
+                        echo "melange.yaml found; building APKs"
+                        mkdir -p packages
+                        docker run --rm -v "${PWD}":/work cgr.dev/chainguard/melange keygen --out /work/packages/melange.rsa
+                        docker run --privileged --rm -v "${PWD}":/work \
+                          cgr.dev/chainguard/melange build .harness/BuildProject/melange.yaml \
+                          --arch amd64,aarch64 \
+                          --signing-key /work/packages/melange.rsa
+                      else
+                        echo "No melange.yaml found at .harness/BuildProject/melange.yaml; skipping APK build"
+                      fi
+              - step:
+                  type: Run
+                  name: Create Dockerfile for build image
+                  identifier: CreateDockerfile
+                  when:
+                    condition: <+execution.steps.DetectMelange.output.outputVariables.MELANGE_PRESENT> == "1" && <+execution.steps.CheckImageExists.output.outputVariables.IMAGE_EXISTS> == "0"
+                  spec:
+                    shell: Sh
+                    command: |
+                      set -euo pipefail
+                      cat > .harness/BuildProject/Dockerfile <<'EOF'
+                      FROM cgr.dev/chainguard/wolfi-base:latest
+                      WORKDIR /app
+                      COPY packages /app/packages
+                      RUN apk update || true && \
+                          # trust local key if present
+                          if [ -f /app/packages/melange.rsa.pub ]; then cp /app/packages/melange.rsa.pub /etc/apk/keys/; fi && \
+                          # install build deps meta-package if present
+                          if ls /app/packages/x86_64/spring-harness-demo-build-deps-*.apk >/dev/null 2>&1; then \
+                            apk add --no-cache /app/packages/x86_64/spring-harness-demo-build-deps-*.apk; \
+                          fi && \
+                          rm -rf /var/cache/apk/*
+                      EOF
+              - step:
+                  type: BuildAndPushDockerRegistry
+                  name: Build and Push build image
+                  identifier: BuildAndPushImage
+                  when:
+                    condition: <+execution.steps.DetectMelange.output.outputVariables.MELANGE_PRESENT> == "1" && <+execution.steps.CheckImageExists.output.outputVariables.IMAGE_EXISTS> == "0"
+                  spec:
+                    connectorRef: hamishesdockerhub
+                    repo: <+execution.steps.ComputeImageTag.output.outputVariables.IMAGE_REPO>
+                    tags:
+                      - <+execution.steps.ComputeImageTag.output.outputVariables.CONTENT_TAG>
+                    dockerfile: .harness/BuildProject/Dockerfile
+                    context: .
+              - step:
+                  type: Run
+                  name: Compute image to use
+                  identifier: ComputeImageToUse
+                  spec:
+                    shell: Sh
+                    command: |
+                      set -euo pipefail
+                      if [ "<+execution.steps.DetectMelange.output.outputVariables.MELANGE_PRESENT>" = "1" ]; then
+                        IMAGE_TO_USE="<+execution.steps.ComputeImageTag.output.outputVariables.IMAGE_REPO>:<+execution.steps.ComputeImageTag.output.outputVariables.CONTENT_TAG>"
+                      else
+                        IMAGE_TO_USE="cgr.dev/chainguard/wolfi-base:latest"
+                      fi
+                      echo "Using image: $IMAGE_TO_USE"
+                      echo "export IMAGE_TO_USE=$IMAGE_TO_USE"
+                    outputVariables:
+                      - name: IMAGE_TO_USE
               - step:
                   type: Run
                   name: Install meta-package and build project
                   identifier: InstallAndBuild
                   spec:
                     shell: Sh
-                    image: cgr.dev/chainguard/wolfi-base:latest
+                    image: <+execution.steps.ComputeImageToUse.output.outputVariables.IMAGE_TO_USE>
                     command: |
-                      # Trust the generated melange public key so apk can verify the package
-                      cp ./packages/melange.rsa.pub /etc/apk/keys/
-                      apk update || true
-                      # Install the locally-built meta-package; apk will pull runtime deps from Wolfi repos
-                      apk add --no-cache ./packages/x86_64/spring-harness-demo-build-deps-*.apk
                       # Make the JDK discoverable to Gradle toolchains
                       export JAVA_HOME="/usr/lib/jvm/java-21-openjdk"
                       export PATH="$JAVA_HOME/bin:$PATH"
@@ -64,5 +177,5 @@ pipeline:
                       which javac || true
                       java -version
                       javac -version || true
-                      ./gradlew --version
+                      ./gradlew --version || true
                       ./gradlew build
