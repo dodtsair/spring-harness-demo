@@ -19,6 +19,12 @@ pipeline:
         name: Build Project
         identifier: BuildProject
         type: CI
+        failureStrategies:
+          - onFailure:
+              errors:
+                - AllErrors
+              action:
+                type: MarkAsFailure
         spec:
           cloneCodebase: true
           platform:
@@ -92,7 +98,8 @@ pipeline:
                   name: Conditional Melange build
                   identifier: ConditionalMelangeBuild
                   when:
-                    condition: <+execution.steps.DetectMelange.output.outputVariables.MELANGE_PRESENT> == "1" && <+execution.steps.CheckImageExists.output.outputVariables.IMAGE_EXISTS> == "0"
+                    stageStatus: Success
+                    condition: "<+execution.steps.DetectMelange.output.outputVariables.MELANGE_PRESENT> == \"1\" && <+execution.steps.CheckImageExists.output.outputVariables.IMAGE_EXISTS> == \"0\""
                   spec:
                     shell: Sh
                     command: |
@@ -113,7 +120,8 @@ pipeline:
                   name: Create Dockerfile for build image
                   identifier: CreateDockerfile
                   when:
-                    condition: <+execution.steps.DetectMelange.output.outputVariables.MELANGE_PRESENT> == "1" && <+execution.steps.CheckImageExists.output.outputVariables.IMAGE_EXISTS> == "0"
+                    stageStatus: Success
+                    condition: "<+execution.steps.DetectMelange.output.outputVariables.MELANGE_PRESENT> == \"1\" && <+execution.steps.CheckImageExists.output.outputVariables.IMAGE_EXISTS> == \"0\""
                   spec:
                     shell: Sh
                     command: |
@@ -136,7 +144,8 @@ pipeline:
                   name: Build and Push build image
                   identifier: BuildAndPushImage
                   when:
-                    condition: <+execution.steps.DetectMelange.output.outputVariables.MELANGE_PRESENT> == "1" && <+execution.steps.CheckImageExists.output.outputVariables.IMAGE_EXISTS> == "0"
+                    stageStatus: Success
+                    condition: "<+execution.steps.DetectMelange.output.outputVariables.MELANGE_PRESENT> == \"1\" && <+execution.steps.CheckImageExists.output.outputVariables.IMAGE_EXISTS> == \"0\""
                   spec:
                     connectorRef: hamishesdockerhub
                     repo: <+execution.steps.ComputeImageTag.output.outputVariables.IMAGE_REPO>
