@@ -201,4 +201,6 @@ pipeline:
                       java -version || true
                       javac -version || true
                       ./gradlew --version || true
+                      apk add openjdk-21
+                      apk add gradle
                       ./gradlew build
