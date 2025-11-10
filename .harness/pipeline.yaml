@@ -113,11 +113,16 @@ pipeline:
                       if [ -f .harness/BuildProject/melange.yaml ]; then
                         echo "melange.yaml found; building APKs"
                         mkdir -p packages
-                        docker run --rm -v "${PWD}":/work -w /work/packages cgr.dev/chainguard/melange keygen
+                        cd packages
+                        docker run --rm -v "${PWD}":/work \
+                          cgr.dev/chainguard/melange keygen
+                        cd ..
+                        cd .harness/BuildProject
                         docker run --privileged --rm -v "${PWD}":/work \
-                          cgr.dev/chainguard/melange build .harness/BuildProject/melange.yaml \
+                          cgr.dev/chainguard/melange build melange.yaml \
                           --arch amd64,aarch64 \
                           --signing-key /work/packages/melange.rsa
+                        cd - >/dev/null 2>&1 || true
                       else
                         echo "No melange.yaml found at .harness/BuildProject/melange.yaml; skipping APK build"
                       fi
