@@ -48,7 +48,7 @@ pipeline:
                       else
                         TAG=nohash
                       fi
-                      IMAGE_REPO="<+pipeline.identifier>/<+stage.identifier>"
+                      IMAGE_REPO=$(printf "%s/%s" "<+pipeline.identifier>" "<+stage.identifier>" | tr '[:upper:]' '[:lower:]')
                       IMAGE_REF="${IMAGE_REPO}:$TAG"
                       # assign shell variables used by the Harness engine when exporting
                       CONTENT_TAG="$TAG"
