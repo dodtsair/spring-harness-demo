@@ -42,7 +42,7 @@ pipeline:
                   spec:
                     shell: Sh
                     command: |
-                      set -euo pipefail
+                      set -eu
                       if TREE=$(git rev-parse -q --verify HEAD:.harness/BuildProject 2>/dev/null); then
                         TAG=$(git rev-parse --short=16 "$TREE")
                       else
@@ -68,7 +68,7 @@ pipeline:
                   spec:
                     shell: Sh
                     command: |
-                      set -euo pipefail
+                      set -eu
                       if [ -f .harness/BuildProject/melange.yaml ]; then
                         echo "export MELANGE_PRESENT=1"
                       else
@@ -83,7 +83,7 @@ pipeline:
                   spec:
                     shell: Sh
                     command: |
-                      set -euo pipefail
+                      set -eu
                       IMAGE_REF="<+execution.steps.ComputeImageTag.output.outputVariables.IMAGE_REF>"
                       echo "Probing image: $IMAGE_REF"
                       if docker manifest inspect "$IMAGE_REF" >/dev/null 2>&1; then
@@ -103,7 +103,7 @@ pipeline:
                   spec:
                     shell: Sh
                     command: |
-                      set -euo pipefail
+                      set -eu
                       if [ -f .harness/BuildProject/melange.yaml ]; then
                         echo "melange.yaml found; building APKs"
                         mkdir -p packages
@@ -125,7 +125,7 @@ pipeline:
                   spec:
                     shell: Sh
                     command: |
-                      set -euo pipefail
+                      set -eu
                       cat > .harness/BuildProject/Dockerfile <<'EOF'
                       FROM cgr.dev/chainguard/wolfi-base:latest
                       WORKDIR /app
@@ -160,7 +160,7 @@ pipeline:
                   spec:
                     shell: Sh
                     command: |
-                      set -euo pipefail
+                      set -eu
                       if [ "<+execution.steps.DetectMelange.output.outputVariables.MELANGE_PRESENT>" = "1" ]; then
                         IMAGE_TO_USE="<+execution.steps.ComputeImageTag.output.outputVariables.IMAGE_REPO>:<+execution.steps.ComputeImageTag.output.outputVariables.CONTENT_TAG>"
                       else
