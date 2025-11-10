@@ -7,5 +7,4 @@ package:
   dependencies:
     runtime:
       - openjdk-21
-      - openjdk-21-default-jvm
       - gradle
