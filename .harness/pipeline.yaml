@@ -84,6 +84,9 @@ pipeline:
                   type: Run
                   name: Check if image exists
                   identifier: CheckImageExists
+                  when:
+                    stageStatus: Success
+                    condition: "<+execution.steps.DetectMelange.output.outputVariables.MELANGE_PRESENT> == \"1\""
                   spec:
                     shell: Sh
                     command: |
