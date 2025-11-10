@@ -72,10 +72,12 @@ pipeline:
                     command: |
                       set -eu
                       if [ -f .harness/BuildProject/melange.yaml ]; then
-                        echo "export MELANGE_PRESENT=1"
+                        MELANGE_PRESENT=1
                       else
-                        echo "export MELANGE_PRESENT=0"
+                        MELANGE_PRESENT=0
                       fi
+                      export MELANGE_PRESENT
+                      echo "export MELANGE_PRESENT=$MELANGE_PRESENT"
                     outputVariables:
                       - name: MELANGE_PRESENT
               - step:
@@ -89,10 +91,12 @@ pipeline:
                       IMAGE_REF="<+execution.steps.ComputeImageTag.output.outputVariables.IMAGE_REF>"
                       echo "Probing image: $IMAGE_REF"
                       if docker manifest inspect "$IMAGE_REF" >/dev/null 2>&1; then
-                        echo "export IMAGE_EXISTS=1"
+                        IMAGE_EXISTS=1
                       else
-                        echo "export IMAGE_EXISTS=0"
+                        IMAGE_EXISTS=0
                       fi
+                      export IMAGE_EXISTS
+                      echo "export IMAGE_EXISTS=$IMAGE_EXISTS"
                     outputVariables:
                       - name: IMAGE_EXISTS
               - step:
@@ -169,6 +173,7 @@ pipeline:
                         IMAGE_TO_USE="cgr.dev/chainguard/wolfi-base:latest"
                       fi
                       echo "Using image: $IMAGE_TO_USE"
+                      export IMAGE_TO_USE
                       echo "export IMAGE_TO_USE=$IMAGE_TO_USE"
                     outputVariables:
                       - name: IMAGE_TO_USE
