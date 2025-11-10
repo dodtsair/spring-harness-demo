@@ -137,12 +137,16 @@ pipeline:
                       cat > .harness/BuildProject/Dockerfile <<'EOF'
                       FROM cgr.dev/chainguard/wolfi-base:latest
                       WORKDIR /app
+                      # Copy signing key and APKs built under repository root
+                      COPY packages/melange.rsa.pub /app/melange.rsa.pub
                       COPY packages /app/packages
                       RUN set -eux; \
-                          cp /app/packages/melange.rsa.pub /etc/apk/keys/; \
+                          cp /app/melange.rsa.pub /etc/apk/keys/; \
                           apk update; \
                           apk add --no-cache /app/packages/x86_64/spring-harness-demo-build-deps-*.apk; \
-                          rm -rf /var/cache/apk/*
+                          rm -rf /var/cache/apk/*; \
+                          rm -f /app/melange.rsa.pub; \
+                          rm -rf /app/packages/*
                       EOF
               - step:
                   type: BuildAndPushDockerRegistry
