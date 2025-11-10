@@ -118,7 +118,7 @@ pipeline:
                         docker run --privileged --rm -v "${PWD}":/work \
                           cgr.dev/chainguard/melange build melange.yaml \
                           --arch amd64,aarch64 \
-                          --signing-key ./packages/melange.rsa
+                          --signing-key ./melange.rsa
                         cd - >/dev/null 2>&1 || true
                       else
                         echo "No melange.yaml found at .harness/BuildProject/melange.yaml; skipping APK build"
