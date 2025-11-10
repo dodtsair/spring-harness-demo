@@ -189,10 +189,9 @@ pipeline:
                     image: <+execution.steps.ComputeImageToUse.output.outputVariables.IMAGE_TO_USE>
                     command: |
                       # Ensure JDK is available when using the fallback base image
-                      if ! command -v java >/dev/null 2>&1; then
-                        apk add --no-cache openjdk-21
-                      fi
                       # Make the JDK discoverable to Gradle toolchains
+                      if apk info -e openjdk-21 >/dev/null 2>&1; then echo "openjdk-21 already installed"; else apk -v add openjdk-21; fi
+                      if apk info -e gradle >/dev/null 2>&1; then echo "gradle already installed"; else apk -v add gradle; fi
                       export JAVA_HOME="/usr/lib/jvm/java-21-openjdk"
                       export PATH="$JAVA_HOME/bin:$PATH"
                       echo "JAVA_HOME=$JAVA_HOME"
@@ -201,6 +200,4 @@ pipeline:
                       java -version || true
                       javac -version || true
                       ./gradlew --version || true
-                      apk -v add openjdk-21
-                      apk -v add gradle
                       ./gradlew build
