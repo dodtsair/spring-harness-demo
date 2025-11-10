@@ -137,9 +137,9 @@ pipeline:
                       cat > .harness/BuildProject/Dockerfile <<'EOF'
                       FROM cgr.dev/chainguard/wolfi-base:latest
                       WORKDIR /app
-                      # Copy signing key and APKs built under repository root
-                      COPY packages/melange.rsa.pub /app/melange.rsa.pub
-                      COPY packages /app/packages
+                      # Copy signing key and APKs built under .harness/BuildProject
+                      COPY .harness/BuildProject/melange.rsa.pub /app/melange.rsa.pub
+                      COPY .harness/BuildProject/packages /app/packages
                       RUN set -eux; \
                           cp /app/melange.rsa.pub /etc/apk/keys/; \
                           apk update; \
