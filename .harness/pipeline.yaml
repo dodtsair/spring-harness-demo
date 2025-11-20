@@ -18,6 +18,8 @@ pipeline:
       identifier: on_push_to_main
       enabled: true
       type: Webhook
+      webhookId: hamishhookdodtsair  # Reference to your existing webhook
+      webhookName: hamish-hook-dodtsair
       spec:
         type: Github
         spec:
