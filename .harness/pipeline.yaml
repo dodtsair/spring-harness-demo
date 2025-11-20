@@ -8,12 +8,29 @@ pipeline:
     ci:
       codebase:
         connectorRef: account.Github_OAuth_1762468233345   # your org/account-scoped connector
-        repoName: dodtsair/spring-harness-demo                  # set once per pipeline
-        # Let triggers (or manual runs) pick the ref:
+        repoName: dodtsair/spring-harness-demo            # set once per pipeline
         build:
           type: branch
           spec:
-            branch: main  
+            branch: main
+  triggers:
+    - name: On Push to Main
+      identifier: on_push_to_main
+      enabled: true
+      type: Webhook
+      spec:
+        type: Github
+        spec:
+          type: Push
+          spec:
+            connectorRef: account.Github_OAuth_1762468233345
+            autoAbortPreviousExecutions: true
+            payloadConditions: []
+            headerConditions: []
+            actions:
+              - push
+            repoName: dodtsair/spring-harness-demo
+            branchName: main
   stages:
     - stage:
         name: Build Project
