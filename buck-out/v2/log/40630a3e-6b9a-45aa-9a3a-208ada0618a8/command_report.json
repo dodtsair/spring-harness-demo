@@ -1,0 +1,10 @@
+{
+  "trace_id": "40630a3e-6b9a-45aa-9a3a-208ada0618a8",
+  "exit_code": 3,
+  "error_messages": [
+    "From load at image/BUCK:2\n\nCaused by:\n    File not found: prelude//container/container.bzl"
+  ],
+  "finalizing_error_messages": [
+    "'invocation recorder' failed to finalize\n\nCaused by:\n    Scribe sink not enabled (internal error)"
+  ]
+}
