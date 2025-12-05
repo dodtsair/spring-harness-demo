@@ -2,15 +2,25 @@
 # Match pipeline/toolchain: Java 21 (LTS)
 java = "temurin-21"
 
-# Optional: match the Gradle wrapper distribution
-# Not required if you always use ./gradlew, but useful for global gradle usage
-gradle = "8.14.3"
-"ubi:chainguard-dev/melange" = "v0.32.0"
+# Buck2 build system (pinned to match .buckversion)
+# buck2 = "2.0.0"
+
+# Melange for container builds
+# "ubi:chainguard-dev/melange" = "v0.32.0"
 
 [tasks.build]
-run = "./gradlew build"
-
+description = "Build all targets"
+run = "buck2 build //..."
 
 [tasks.test]
-run = "./gradlew test"
+description = "Run all tests"
+run = "buck2 test //..."
+
+[tasks.run]
+description = "Run the main application"
+run = "buck2 run //:spring-harness-demo"
+
+[tasks.image]
+description = "Build the container image"
+run = "buck2 build //image:spring-harness-demo-image"
 

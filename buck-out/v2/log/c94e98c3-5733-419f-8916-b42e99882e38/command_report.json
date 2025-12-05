@@ -1,0 +1,10 @@
+{
+  "trace_id": "c94e98c3-5733-419f-8916-b42e99882e38",
+  "exit_code": 3,
+  "error_messages": [
+    "Error loading `load` of `@prelude//container:container.bzl` from `image/BUCK:2:6-41`\n\nCaused by:\n    unknown cell alias: `prelude`. In cell `root`, known aliases are: `root`"
+  ],
+  "finalizing_error_messages": [
+    "'invocation recorder' failed to finalize\n\nCaused by:\n    Scribe sink not enabled (internal error)"
+  ]
+}

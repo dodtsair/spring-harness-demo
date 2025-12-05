@@ -1,0 +1,9 @@
+# Melange BUCK file
+load("@prelude//container:container.bzl", "container_image")
+
+# Base image with Java 21 runtime
+container_image(
+    name = "java-runtime",
+    base = "eclipse-temurin:21-jre-jammy",
+    visibility = ["PUBLIC"],
+)
