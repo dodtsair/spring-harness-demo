@@ -1,0 +1,10 @@
+{
+  "trace_id": "6f5e7199-7844-4037-9025-8a60e83e7dd2",
+  "exit_code": 3,
+  "error_messages": [
+    "Error evaluating build file: `root//java-app:BUCK`\n\nCaused by:\n    error: Module has no symbol `java_library`\n     --> java-app/BUCK:2:33\n      |\n    2 | load(\"@prelude//java:java.bzl\", \"java_library\", \"maven_jar\")\n      |                                 ^^^^^^^^^^^^^^\n      |\n    "
+  ],
+  "finalizing_error_messages": [
+    "'invocation recorder' failed to finalize\n\nCaused by:\n    Scribe sink not enabled (internal error)"
+  ]
+}
