@@ -27,3 +27,7 @@
 
 [project]
   ignore = .git
+
+[build]
+  java_toolchain = "//:java_toolchain"
+

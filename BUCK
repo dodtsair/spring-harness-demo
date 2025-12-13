@@ -1,7 +1,7 @@
-# A list of available rules and their signatures can be found here: https://buck2.build/docs/prelude/globals/
+# BUCK at repo root
 
-genrule(
-    name = "hello_world",
-    out = "out.txt",
-    cmd = "echo BUILT BY BUCK2> $OUT",
+alias(
+    name = "spring-harness-demo",
+    actual = "//java-app:package-jar",
+    visibility = ["//..."],
 )
