@@ -1,0 +1,76 @@
+# melange/BUCK
+
+# Generate RSA key pair
+genrule(
+    name = "generate-keys",
+    out = "keys", 
+    srcs = [
+        "melange.yaml",
+    ],
+    cmd = """
+        docker run --rm -v "$OUT:/work" \
+            cgr.dev/chainguard/melange keygen
+        ls $OUT
+    """,
+    visibility = ["//..."],
+)
+
+export_file(
+    name = "melange-yaml",
+    src = "melange.yaml",
+    visibility = ["//..."],
+)
+
+genrule(
+    name = "build-apks",
+    out = "apks",
+    srcs = [
+        ":melange-yaml",
+        ":generate-keys",
+    ],
+    cmd = """
+      set -euo pipefail
+
+      resolve_path() {
+        p="$1"
+        if command -v realpath >/dev/null 2>&1; then
+          realpath "$p"
+        else
+          # GNU coreutils: readlink -f; macOS may lack -f
+          readlink -f "$p"
+        fi
+      }
+
+      CONFIG_LINK="$(location :melange-yaml)"
+      KEYS_LINK="$(location :generate-keys)"
+
+      CONFIG_REAL=`resolve_path "$CONFIG_LINK"`
+      KEYS_REAL=`resolve_path "$KEYS_LINK"`
+
+      echo "CONFIG_LINK=$CONFIG_LINK"
+      echo "CONFIG_REAL=$CONFIG_REAL"
+      echo "KEYS_LINK=$KEYS_LINK"
+      echo "KEYS_REAL=$KEYS_REAL"
+
+      docker run --privileged --rm \
+        -v "$CONFIG_REAL:/work/melange.yaml:ro" \
+        -v "$KEYS_REAL:/work/keys:ro" \
+        -v "$OUT:/out" \
+        -w /work \
+        cgr.dev/chainguard/melange build /work/melange.yaml \
+          --arch amd64,aarch64 \
+          --signing-key /work/keys/melange.rsa \
+          --out-dir /out
+
+      cp "$KEYS_REAL/melange.rsa.pub" "$OUT/"
+    """,
+    visibility = ["//..."],
+)
+
+# Export the built APKs and public key
+export_file(
+    name = "apk-files",
+    src = ":build-apks",
+    out = "apk-packages",
+    visibility = ["//..."],
+)

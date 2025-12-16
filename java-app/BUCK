@@ -22,8 +22,8 @@ genrule(
         set -e
         cd $SRCDIR
         chmod +x gradlew
-        # Run Gradle with build cache and output directly to $OUT
-        ./gradlew assemble --no-daemon \
+        # Only compile classes, don't create JAR
+        ./gradlew classes --no-daemon \
             --build-cache \
             --project-cache-dir="$OUT/.gradle" \
             -Porg.gradle.project.buildDir="$OUT/build"
@@ -71,10 +71,36 @@ genrule(
 # ---------------------------------------------------------
 genrule(
     name = "package-jar",
-    srcs = [":gradle-test"],
+    srcs = [
+        ":gradle-build",  # For compiled classes
+        ":gradle-test",   # Ensures tests have passed
+        "gradlew",
+        "gradlew.bat",
+        "gradle/wrapper/gradle-wrapper.jar",
+        "gradle/wrapper/gradle-wrapper.properties",
+        "build.gradle",
+        "settings.gradle",
+    ] + glob([
+        "src/main/**/*",  # Include all source files for main class resolution
+    ]),
     out = "spring-harness-demo.jar",
     cmd = """
-        cp "$(location :gradle-build)/libs/demo-0.0.1-SNAPSHOT.jar" "$OUT"
+        # Make sure gradlew is executable
+        cd $SRCDIR 
+        chmod +x ./gradlew
+        
+        # Run assemble with --no-rebuild and --no-test
+        ./gradlew assemble --no-daemon --no-rebuild -x test
+        
+        # Create output directory and copy the non-plain JAR
+        mkdir -p $OUT
+        # Find and copy the non-plain JAR (Spring Boot executable JAR)
+        for jar in "$SRCDIR/build/libs/"*.jar; do
+            if [[ "$jar" != *"-plain.jar" ]]; then
+                cp "$jar" "$OUT/spring-harness-demo.jar"
+                break
+            fi
+        done
     """,
     visibility = ["//..."],
 )
