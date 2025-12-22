@@ -1,0 +1,44 @@
+# build-image/BUCK
+# Export the Dockerfile so it can be referenced as a target
+export_file(
+    name = "dockerfile",
+    src = "Dockerfile",
+    visibility = ["//..."],
+)
+
+# Depend on the APK files from the melange target
+genrule(
+    name = "build-image",
+    out = "spring-harness-demo.tar",
+    srcs = [
+        ":dockerfile",
+        "//melange:apk-files",  # This depends on the apk-files target in melange
+    ],
+    cmd = """      
+        mkdir -p $OUT  
+        # Copy the APK files to the build context
+        cp -r $(location //melange:apk-files)/* $TMP/
+        
+        # Copy the Dockerfile to the output directory
+        cp $(location :dockerfile) $TMP/Dockerfile
+        
+        # Build the Docker image
+        (cd $TMP && docker build -t spring-harness-demo:latest .)
+        
+
+        echo here
+        echo $OUT
+        echo here2
+        # Save the image to a tar file
+        docker save -o $OUT/spring-harness-demo.tar spring-harness-demo:latest
+    """,
+    visibility = ["//..."],
+)
+
+# Export the built image
+export_file(
+    name = "image",
+    src = ":build-image",
+    out = "spring-harness-demo-image",
+    visibility = ["//..."],
+)

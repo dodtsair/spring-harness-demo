@@ -2,12 +2,13 @@
 FROM cgr.dev/chainguard/wolfi-base:latest
 
 # Copy the APK files
-COPY *.apk* /tmp/
-COPY melange-rsa.pub /etc/apk/keys/
+COPY aarch64/*.apk* /tmp/aarch64/
+COPY x86_64/*.apk* /tmp/x86_64/
+COPY melange.rsa.pub /etc/apk/keys/
 
 RUN apk update
 # Install the APK
-RUN apk add --no-cache /tmp/*.apk
+RUN apk add --no-cache /tmp/aarch64/*.apk /tmp/x86_64/*.apk
 
 RUN rm -rf /var/cache/apk/*; \
     rm -f /tmp/melange.rsa.pub; \
