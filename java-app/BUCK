@@ -1,42 +1,12 @@
 # java-app/BUCK
 
-# ---------------------------------------------------------
-# 1) BUILD: compile & assemble the JAR (no tests)
-# ---------------------------------------------------------
-# In java-app/BUCK
-genrule(
-    name = "gradle-build",
-    out = "build",
-    srcs = [
-        "gradlew",
-        "gradlew.bat",
-        "gradle/wrapper/gradle-wrapper.jar",
-        "gradle/wrapper/gradle-wrapper.properties",
-        "build.gradle",
-        "settings.gradle",
-    ] + glob([
-        "src/main/**/*",
-        "src/test/**/*",
-    ]),
-    cmd = """
-        set -e
-        cd $SRCDIR
-        chmod +x gradlew
-        # Only compile classes, don't create JAR
-        ./gradlew classes --no-daemon \
-            --build-cache \
-            --project-cache-dir="$OUT/.gradle" \
-            -Porg.gradle.project.buildDir="$OUT/build"
-    """,
-    visibility = ["//..."],
-)
 
 # ---------------------------------------------------------
 # 2) TEST: run Gradle tests, AFTER build
 #    srcs = [":gradle-build"] forces Buck to run build first.
 # ---------------------------------------------------------
 genrule(
-    name = "gradle-test",
+    name = "gradle-test-old",
     srcs = [
         ":gradle-build",
         "gradlew",
@@ -60,6 +30,39 @@ genrule(
         # Prepare output directory
         mkdir -p $OUT
         cp -R $SRCDIR/build/test-results "$OUT/"; 
+    """,
+    visibility = ["//..."],
+)
+
+
+genrule(
+    name = "gradle-test",
+    out = "test-results",
+    cmd = """
+        # 1. Load the same image used for building
+        docker load -i $(location //build-image:build-kaniko-image)/spring-harness-demo.tar
+        
+        # 3. Mount source and the PREVIOUS build output (from :gradle-build)
+        docker run --rm \
+            -v "$(source gradlew):/workspace/gradlew" \
+            -v "$(source gradle/wrapper/gradle-wrapper.jar):/workspace/gradle/wrapper/gradle-wrapper.jar" \
+            -v "$(source gradle/wrapper/gradle-wrapper.properties):/workspace/gradle/wrapper/gradle-wrapper.properties" \
+            -v "$(source build.gradle):/workspace/build.gradle" \
+            -v "$(source settings.gradle):/workspace/settings.gradle" \
+            -v "$(source src/main):/workspace/src/main" \
+            -v "$(source src/test):/workspace/src/test" \
+            -v "$(location :gradle-build)/build:/workspace/build" \
+            -v "$OUT:/output" \
+            -w /workspace \
+            --entrypoint /bin/sh \
+            spring-harness-demo:latest \
+            -c '
+                ./gradlew test --no-daemon \
+                    -Dorg.gradle.project.buildDir=/workspace/build \
+                    --project-cache-dir=/output/.gradle \
+                    -PtestResultsDir=/output \
+                    -PtestReportDir=/output/reports
+            '
     """,
     visibility = ["//..."],
 )
@@ -102,5 +105,38 @@ genrule(
             fi
         done
     """,
+    visibility = ["//..."],
+)
+
+
+# ---------------------------------------------------------
+# 1.1) BUILD (Containerized): compile & assemble the JAR (no tests) in container
+#    This runs the same build as gradle-build but inside a container
+# ---------------------------------------------------------
+genrule(
+    name = "gradle-build",
+    out = "build-container",
+    cmd = """
+        # Load the container image
+        docker load -i $(location //build-image:build-kaniko-image)/spring-harness-demo.tar
+                
+        # Run Gradle build inside container using the image's ENTRYPOINT and CMD
+        docker run --rm \
+            -v "$(source gradlew):/workspace/gradlew" \
+            -v "$(source gradle/wrapper/gradle-wrapper.jar):/workspace/gradle/wrapper/gradle-wrapper.jar" \
+            -v "$(source gradle/wrapper/gradle-wrapper.properties):/workspace/gradle/wrapper/gradle-wrapper.properties" \
+            -v "$(source build.gradle):/workspace/build.gradle" \
+            -v "$(source settings.gradle):/workspace/settings.gradle" \
+            -v "$(source src/main):/workspace/src/main" \
+            -v "$OUT:/output" \
+            -w /workspace \
+            --entrypoint /bin/sh \
+            spring-harness-demo:latest \
+            -c '
+            ./gradlew classes --no-daemon --build-cache --project-cache-dir=/output/.gradle -Dorg.gradle.project.buildDir=/output/build
+            echo "Build completed with exit code: \$?" >> /output/build-container.log;
+            ls -LR /output;
+            ';
+        """,
     visibility = ["//..."],
 )

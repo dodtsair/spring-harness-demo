@@ -1,26 +1,15 @@
 # build-image/BUCK
-# Export the Dockerfile so it can be referenced as a target
-export_file(
-    name = "dockerfile",
-    src = "Dockerfile",
-    visibility = ["//..."],
-)
-
 # Depend on the APK files from the melange target
 genrule(
     name = "build-image",
     out = "spring-harness-demo.tar",
-    srcs = [
-        ":dockerfile",
-        "//melange:apk-files",  # This depends on the apk-files target in melange
-    ],
     cmd = """      
         mkdir -p $OUT  
         # Copy the APK files to the build context
         cp -r $(location //melange:apk-files)/* $TMP/
         
         # Copy the Dockerfile to the output directory
-        cp $(location :dockerfile) $TMP/Dockerfile
+        cp $(source kaniko-workspace/Dockerfile) $TMP/Dockerfile
         
         # Build the Docker image
         (cd $TMP && docker build -t spring-harness-demo:latest .)
@@ -35,10 +24,32 @@ genrule(
     visibility = ["//..."],
 )
 
-# Export the built image
-export_file(
-    name = "image",
-    src = ":build-image",
-    out = "spring-harness-demo-image",
+# # Export the built image
+# export_file(
+#     name = "image",
+#     src = ":build-image",
+#     out = "spring-harness-demo-image",
+#     visibility = ["//..."],
+# )
+
+genrule(
+    name = "build-kaniko-image",
+    out = "spring-harness-demo.tar",
+    cmd = """      
+        
+        # Run Kaniko to build and save the image
+        docker run --rm \
+            -v "$(source kaniko-workspace):/workspace" \
+            -v "$(location //melange:apk-files):/workspace/apk-files" \
+            -v "$OUT:/output" \
+            gcr.io/kaniko-project/executor:latest \
+            --dockerfile=/workspace/Dockerfile \
+            --context=dir:///workspace \
+            --destination=spring-harness-demo:latest \
+            --tarPath=/output/spring-harness-demo.tar \
+            --no-push
+        docker load -i $OUT/spring-harness-demo.tar
+        docker tag spring-harness-demo:latest spring-harness-demo:latest    
+    """,
     visibility = ["//..."],
 )

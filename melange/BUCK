@@ -4,30 +4,16 @@
 genrule(
     name = "generate-keys",
     out = "keys", 
-    srcs = [
-        "melange.yaml",
-    ],
     cmd = """
         docker run --rm -v "$OUT:/work" \
             cgr.dev/chainguard/melange keygen
-        ls $OUT
     """,
-    visibility = ["//..."],
-)
-
-export_file(
-    name = "melange-yaml",
-    src = "melange.yaml",
     visibility = ["//..."],
 )
 
 genrule(
     name = "build-apks",
     out = "apks",
-    srcs = [
-        ":melange-yaml",
-        ":generate-keys",
-    ],
     cmd = """
       set -euo pipefail
 
@@ -41,7 +27,7 @@ genrule(
         fi
       }
 
-      CONFIG_LINK="$(location :melange-yaml)"
+      CONFIG_LINK="$(source melange-workspace/melange.yaml)"
       KEYS_LINK="$(location :generate-keys)"
 
       CONFIG_REAL=`resolve_path "$CONFIG_LINK"`
