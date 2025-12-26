@@ -1,5 +1,6 @@
 [cells]
   root = .
+  buck = .buck
   prelude = prelude
   toolchains = toolchains
   none = none
@@ -10,24 +11,22 @@
   fbcode = none
   fbsource = none
   fbcode_macros = none
-  buck = none
 
-# Uses a copy of the prelude bundled with the buck2 binary. You can alternatively delete this
-# section and vendor a copy of the prelude to the `prelude` directory of your project.
 [external_cells]
+  # This provides the 'genrule' definition and other standard rules
   prelude = bundled
 
 [parser]
-  target_platform_detector_spec = target:root//...->prelude//platforms:default \
+  # Add the 'buck' cell to the detector spec
+  target_platform_detector_spec = \
+    target:root//...->prelude//platforms:default \
+    target:buck//...->prelude//platforms:default \
     target:prelude//...->prelude//platforms:default \
     target:toolchains//...->prelude//platforms:default
 
 [build]
+  # This tells Buck2 where it is allowed to run the genrule commands
   execution_platforms = prelude//platforms:default
 
 [project]
   ignore = .git
-
-[build]
-  java_toolchain = "//:java_toolchain"
-

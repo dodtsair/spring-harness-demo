@@ -23,4 +23,5 @@ ENV PATH="${JAVA_HOME}/bin:${PATH}"
 # Set working directory and entrypoint
 WORKDIR /workspace
 ENTRYPOINT ["/workspace/gradlew"]
-CMD ["classes",  "--no-daemon", "--build-cache", "--project-cache-dir=/output/.gradle", "-Dorg.gradle.project.buildDir=/output/build"]
+# CMD ["classes",  "--no-daemon", "--build-cache", "--project-cache-dir=/output/.gradle", "-Dorg.gradle.project.buildDir=/output/build"]
+CMD ["build",  "--no-daemon",  "-Dorg.gradle.project.buildDir=/workspace/build"]

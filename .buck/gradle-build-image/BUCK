@@ -1,0 +1,19 @@
+genrule(
+    name = "gradle-build-image",
+    out = "gradle-build-image.tar",
+    cmd = """      
+        
+        # Run Kaniko to build and save the image
+        docker run --rm \
+            -v "$(source kaniko-workspace):/workspace" \
+            -v "$(location //melange:apk-files):/workspace/apk-files" \
+            -v "$OUT:/output" \
+            gcr.io/kaniko-project/executor:latest \
+            --dockerfile=/workspace/Dockerfile \
+            --context=dir:///workspace \
+            --destination=gradle-build-image:latest \
+            --tarPath=/output/gradle-build-image.tar \
+            --no-push
+    """,
+    visibility = ["//..."],
+)

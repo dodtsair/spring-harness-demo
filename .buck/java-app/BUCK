@@ -1,0 +1,35 @@
+# java-app cell BUCK file
+
+
+# ---------------------------------------------------------
+# 3) PACKAGE: create a single JAR file output, AFTER tests
+# ---------------------------------------------------------
+genrule(
+    name = "gradle-build",
+    # We reference the files from the root cell using the / syntax (not :)
+    out = "dist",
+    cmd = """
+        # 1. Load the build container image
+        # Assuming build-image BUCK is also in the .buck/ metadata cell
+        docker load -i $(location //gradle-build-image:gradle-build-image)/gradle-build-image.tar
+                
+        # 2. Run the full Gradle build (Compile + Test + Assemble)
+        docker run --rm \
+            -v "$(location root//:all_sources)/java-app/gradlew:/workspace/gradlew" \
+            -v "$(location root//:all_sources)/java-app/gradle/wrapper/gradle-wrapper.jar:/workspace/gradle/wrapper/gradle-wrapper.jar" \
+            -v "$(location root//:all_sources)/java-app/gradle/wrapper/gradle-wrapper.properties:/workspace/gradle/wrapper/gradle-wrapper.properties" \
+            -v "$(location root//:all_sources)/java-app/build.gradle:/workspace/build.gradle" \
+            -v "$(location root//:all_sources)/java-app/settings.gradle:/workspace/settings.gradle" \
+            -v "$(location root//:all_sources)/java-app/src:/workspace/src" \
+            -v "$OUT:/workspace/build" \
+            -w /workspace \
+            --entrypoint /bin/sh \
+            spring-harness-demo:latest \
+            -c '
+                # Run the build. Gradle owns /workspace/build, so it can clean stale files.
+                ./gradlew build --no-daemon -Dorg.gradle.project.buildDir=/workspace/build
+                
+            '
+    """,
+    visibility = ["//...", "root//..."],
+)
