@@ -2,9 +2,9 @@
 FROM cgr.dev/chainguard/wolfi-base:latest
 
 # Copy the APK files
-COPY /apk-files/aarch64/*.apk* /tmp/aarch64/
-COPY /apk-files/x86_64/*.apk* /tmp/x86_64/
-COPY /apk-files/melange.rsa.pub /etc/apk/keys/
+COPY /build-apks/aarch64/*.apk* /tmp/aarch64/
+COPY /build-apks/x86_64/*.apk* /tmp/x86_64/
+COPY /generate-keys/melange.rsa.pub /etc/apk/keys/
 
 
 
@@ -24,4 +24,4 @@ ENV PATH="${JAVA_HOME}/bin:${PATH}"
 WORKDIR /workspace
 ENTRYPOINT ["/workspace/gradlew"]
 # CMD ["classes",  "--no-daemon", "--build-cache", "--project-cache-dir=/output/.gradle", "-Dorg.gradle.project.buildDir=/output/build"]
-CMD ["build",  "--no-daemon",  "-Dorg.gradle.project.buildDir=/workspace/build"]
+CMD ["build",  "--no-daemon",  "-Dorg.gradle.project.buildDir=/output/"]

@@ -9,7 +9,7 @@ genrule(
     cmd = """
         # 1. Create the output directory structure
         mkdir -p $OUT/bin
-        mkdir -p $OUT/reports
+        mkdir -p $OUT/reports/tests 
 
         # 2. Reference the java-app output from the 'buck' cell
         # Copy the JAR
@@ -17,6 +17,7 @@ genrule(
         
         # Copy test results
         cp -R $(location buck//java-app:gradle-build)/reports/. $OUT/reports/
+        cp -R $(location buck//java-app:gradle-build)/test-results/. $OUT/reports/tests/
     """,
     visibility = ["//..."],
 )

@@ -1,19 +1,45 @@
 genrule(
     name = "gradle-build-image",
     out = "gradle-build-image.tar",
+    srcs = [
+        "kaniko-workspace",
+        "//melange:build-apks",
+        "//melange:generate-keys",
+    ],
+    env = {
+        "STEP_IMAGE": "gcr.io/kaniko-project/executor:latest",
+        "STEP_ACTION": "--dockerfile=/workspace/Dockerfile --context=dir:///workspace --destination=gradle-build-image:latest --tarPath=/output/gradle-build-image.tar --no-push"
+    },
     cmd = """      
         
         # Run Kaniko to build and save the image
         docker run --rm \
             -v "$(source kaniko-workspace):/workspace" \
-            -v "$(location //melange:apk-files):/workspace/apk-files" \
+            -v "$(location //melange:build-apks):/workspace/build-apks" \
+            -v "$(location //melange:generate-keys)/melange.rsa.pub:/workspace/generate-keys/melange.rsa.pub" \
             -v "$OUT:/output" \
-            gcr.io/kaniko-project/executor:latest \
-            --dockerfile=/workspace/Dockerfile \
-            --context=dir:///workspace \
-            --destination=gradle-build-image:latest \
-            --tarPath=/output/gradle-build-image.tar \
-            --no-push
+            $STEP_IMAGE $STEP_ACTION \
+    """,
+    visibility = ["//..."],
+)
+
+genrule(
+    name = "load-gradle-image",
+    out = "load_sentinel.txt", # A small file to prove the load happened
+    env = {
+        "STEP_IMAGE": "docker:latest", # The CLI tool used to perform the load
+        "STEP_ACTION": "load -i /workspace/gradle-build-image.tar",
+    },
+    cmd = """
+        # We mount the Docker socket to talk to the host daemon
+        # We mount the tarball location from the previous rule
+        docker run --rm \
+            -v /var/run/docker.sock:/var/run/docker.sock \
+            -v "$(location //gradle-build-image:gradle-build-image):/workspace" \
+            -v "$OUT:/output" \
+            $STEP_IMAGE $STEP_ACTION
+
+        echo "done" > $OUT/load_sentinel.txt
     """,
     visibility = ["//..."],
 )
