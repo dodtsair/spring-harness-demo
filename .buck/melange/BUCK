@@ -1,16 +1,19 @@
-# melange/BUCK
+# .buck/melange/BUCK
 
 # Generate RSA key pair
 genrule(
     name = "generate-keys",
     out = "keys", 
     env = {
+        "PROJECT_DIR": native.package_name()[len(".buck/"):],
         "STEP_IMAGE": "cgr.dev/chainguard/melange",
-        "STEP_ACTION": "keygen"
+        "STEP_ACTION": "keygen",
     },
     cmd = """
-        docker run --rm -v "$OUT:/work" \
-            $STEP_IMAGE $STEP_ACTION
+        docker run --rm \
+          -v "$OUT:/workspace/build/$PROJECT_DIR" \
+          -w /workspace/build/$PROJECT_DIR \
+            $STEP_IMAGE $STEP_ACTION \
     """,
     visibility = ["//..."],
 )
@@ -23,19 +26,22 @@ genrule(
         ":generate-keys",
     ],
     env = {
+        # Current package path without ".buck/"
+        "PROJECT_DIR": native.package_name()[len(".buck/"):],
         "STEP_IMAGE": "cgr.dev/chainguard/melange",
-        "STEP_ACTION": "build /workspace/melange.yaml"
+        "STEP_ACTION":
+            "build /workspace/build/" + native.package_name()[len(".buck/"):] + "/melange-workspace/melange.yaml " + 
+            "--arch amd64,aarch64 " + 
+            "--signing-key /workspace/build/" + native.package_name()[len(".buck/"):] + "/keys/melange.rsa " + 
+            "--out-dir /workspace/build/" + native.package_name()[len(".buck/"):] 
     },
     cmd = """
       docker run --privileged --rm \
-        -v "$(source melange-workspace/melange.yaml):/workspace/melange.yaml:ro" \
-        -v "$(location :generate-keys):/workspace/keys:ro" \
-        -v "$OUT:/output" \
-        -w /workspace \
-        $STEP_IMAGE $STEP_ACTION \
-          --arch amd64,aarch64 \
-          --signing-key /workspace/keys/melange.rsa \
-          --out-dir /output
+        -v "$OUT:/workspace/build/$PROJECT_DIR" \
+        -v "$(source melange-workspace/melange.yaml):/workspace/build/$PROJECT_DIR/melange-workspace/melange.yaml:ro" \
+        -v "$(location :generate-keys):/workspace/build/$PROJECT_DIR/keys:ro" \
+        -w "/workspace/build/$PROJECT_DIR" \
+        $STEP_IMAGE $STEP_ACTION
     """,
     visibility = ["//..."],
 )
