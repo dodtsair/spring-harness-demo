@@ -14,7 +14,7 @@ genrule(
     ],
     env = {
         "STEP_IMAGE": "spring-harness-demo:latest",
-        "STEP_ACTION": ""
+        "STEP_ACTION": "./gradlew build --no-daemon -Dorg.gradle.project.buildDir=/output/"
     },
     cmd = """
                 

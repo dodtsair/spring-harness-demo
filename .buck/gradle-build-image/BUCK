@@ -2,20 +2,20 @@
 
 genrule(
     name = "gradle-build-image",
-    out = "gradle-build-image.tar",
+    out = "gradle-build-image",
     srcs = [
         "kaniko-workspace",
         "//melange:build-apks",
         "//melange:generate-keys",
     ],
     env = {
-        "PROJECT_DIR": native.package_name()[len(".buck/"):],
+        "PROJECT_DIR": native.package_name(),
         "STEP_IMAGE": "gcr.io/kaniko-project/executor:latest",
         "STEP_ACTION":
-            "--dockerfile=.buck/" + native.package_name()[len(".buck/"):] + "/kaniko-workspace/Dockerfile " +
+            "--dockerfile=.buck/" + native.package_name() + "/kaniko-workspace/Dockerfile " +
             "--context=dir://. " +
             "--destination=gradle-build-image:latest " +
-            "--tarPath=build/" + native.package_name()[len(".buck/"):] + "/gradle-build-image.tar " +
+            "--tarPath=build/" + native.package_name() + "/gradle-build-image.tar " +
             "--no-push ",
     },
     cmd = """
@@ -32,23 +32,24 @@ genrule(
 
 genrule(
     name = "load-gradle-image",
-    out = "load_sentinel.txt",
+    out = "load-gradle-image",
     srcs = [
         ":gradle-build-image",
     ],
     env = {
-        "PROJECT_DIR": native.package_name()[len(".buck/"):],
+        "PROJECT_DIR": native.package_name(),
         "STEP_IMAGE": "docker:latest",
         "STEP_ACTION":
-            "load -i build/" + native.package_name()[len(".buck/"):] + "/gradle-build-image.tar",
+            "load -i ./gradle-build-image.tar",
     },
     cmd = """
         docker run --rm \
           -v /var/run/docker.sock:/var/run/docker.sock \
-          -v "$(location :gradle-build-image):/workspace/build/$PROJECT_DIR/gradle-build-image.tar:ro" \
+          -v "$(location :gradle-build-image):/workspace/build/$PROJECT_DIR/:ro" \
           -w "/workspace/build/$PROJECT_DIR" \
           $STEP_IMAGE $STEP_ACTION
 
+        mkdir -p $OUT
         echo "done" > "$OUT/load_sentinel.txt"
     """,
     visibility = ["//..."],
