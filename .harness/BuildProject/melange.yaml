@@ -1,0 +1,10 @@
+package:
+  name: spring-harness-demo-build-deps
+  version: 0.1.0
+  epoch: 0
+  description: Build dependencies for the Spring Boot Gradle project
+
+  dependencies:
+    runtime:
+      - openjdk-21
+      - gradle
