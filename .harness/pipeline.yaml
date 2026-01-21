@@ -7,8 +7,8 @@ pipeline:
   properties:
     ci:
       codebase:
-        connectorRef: account.Github_OAuth_1762468233345   # your org/account-scoped connector
-        repoName: dodtsair/spring-harness-demo            # set once per pipeline
+        connectorRef: account.Github_OAuth_1762468233345
+        repoName: dodtsair/spring-harness-demo
         build:
           type: branch
           spec:
@@ -18,7 +18,7 @@ pipeline:
       identifier: on_push_to_main
       enabled: true
       type: Webhook
-      webhookId: hamishhookdodtsair  # Reference to your existing webhook
+      webhookId: hamishhookdodtsair
       webhookName: hamish-hook-dodtsair
       spec:
         type: Github
@@ -105,7 +105,7 @@ pipeline:
                   identifier: CheckImageExists
                   when:
                     stageStatus: Success
-                    condition: "<+execution.steps.DetectMelange.output.outputVariables.MELANGE_PRESENT> == \"1\""
+                    condition: <+execution.steps.DetectMelange.output.outputVariables.MELANGE_PRESENT> == "1"
                   spec:
                     shell: Sh
                     command: |
@@ -127,7 +127,7 @@ pipeline:
                   identifier: ConditionalMelangeBuild
                   when:
                     stageStatus: Success
-                    condition: "<+execution.steps.DetectMelange.output.outputVariables.MELANGE_PRESENT> == \"1\" && <+execution.steps.CheckImageExists.output.outputVariables.IMAGE_EXISTS> == \"0\""
+                    condition: <+execution.steps.DetectMelange.output.outputVariables.MELANGE_PRESENT> == "1" && <+execution.steps.CheckImageExists.output.outputVariables.IMAGE_EXISTS> == "0"
                   spec:
                     shell: Sh
                     command: |
@@ -151,7 +151,7 @@ pipeline:
                   identifier: CreateDockerfile
                   when:
                     stageStatus: Success
-                    condition: "<+execution.steps.DetectMelange.output.outputVariables.MELANGE_PRESENT> == \"1\" && <+execution.steps.CheckImageExists.output.outputVariables.IMAGE_EXISTS> == \"0\""
+                    condition: <+execution.steps.DetectMelange.output.outputVariables.MELANGE_PRESENT> == "1" && <+execution.steps.CheckImageExists.output.outputVariables.IMAGE_EXISTS> == "0"
                   spec:
                     shell: Sh
                     command: |
@@ -169,6 +169,7 @@ pipeline:
                           rm -rf /var/cache/apk/*; \
                           rm -f /app/melange.rsa.pub; \
                           rm -rf /app/packages/*
+                      ENTRYPOINT echo $akey && echo $bkey && ./gradlew build
                       EOF
               - step:
                   type: BuildAndPushDockerRegistry
@@ -176,7 +177,7 @@ pipeline:
                   identifier: BuildAndPushImage
                   when:
                     stageStatus: Success
-                    condition: "<+execution.steps.DetectMelange.output.outputVariables.MELANGE_PRESENT> == \"1\" && <+execution.steps.CheckImageExists.output.outputVariables.IMAGE_EXISTS> == \"0\""
+                    condition: <+execution.steps.DetectMelange.output.outputVariables.MELANGE_PRESENT> == "1" && <+execution.steps.CheckImageExists.output.outputVariables.IMAGE_EXISTS> == "0"
                   spec:
                     connectorRef: hamishesdockerhub
                     repo: <+execution.steps.ComputeImageTag.output.outputVariables.IMAGE_REPO>
@@ -207,19 +208,7 @@ pipeline:
                   name: build project
                   identifier: build
                   spec:
-                    shell: Sh
+                    inputs:
+                      akey: one
+                      bkey: two
                     image: <+execution.steps.ComputeImageToUse.output.outputVariables.IMAGE_TO_USE>
-                    command: |
-                      # Ensure JDK is available when using the fallback base image
-                      # Make the JDK discoverable to Gradle toolchains
-                      if apk info -e openjdk-21 >/dev/null 2>&1; then echo "openjdk-21 already installed"; else apk -v add openjdk-21; fi
-                      if apk info -e gradle >/dev/null 2>&1; then echo "gradle already installed"; else apk -v add gradle; fi
-                      export JAVA_HOME="/usr/lib/jvm/java-21-openjdk"
-                      export PATH="$JAVA_HOME/bin:$PATH"
-                      echo "JAVA_HOME=$JAVA_HOME"
-                      which java || true
-                      which javac || true
-                      java -version || true
-                      javac -version || true
-                      ./gradlew --version || true
-                      ./gradlew build

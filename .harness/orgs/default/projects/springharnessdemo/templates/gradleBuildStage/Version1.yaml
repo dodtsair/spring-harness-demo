@@ -1,0 +1,45 @@
+template:
+  name: gradleBuildStage
+  identifier: gradleBuildStage
+  versionLabel: Version1
+  type: Stage
+  projectIdentifier: springharnessdemo
+  orgIdentifier: default
+  tags: {}
+  spec:
+    type: Custom
+    spec:
+      execution:
+        steps:
+          - step:
+              type: Container
+              name: Container_1
+              identifier: Container_1
+              spec:
+                connectorRef: hamishesdockerhub
+                image: dodtsair/springharnessdemoci-buildproject:70e7524fa5ba0e14
+                command: echo hello
+                shell: Sh
+                infrastructure:
+                  type: KubernetesDirect
+                  spec:
+                    connectorRef: account.harnessekscluster
+                    namespace: dfa
+                    resources:
+                      limits:
+                        cpu: "0.5"
+                        memory: 500Mi
+                    annotations: {}
+                    labels: {}
+                    containerSecurityContext:
+                      capabilities:
+                        drop: []
+                        add: []
+                    nodeSelector: {}
+                reports:
+                  type: JUnit
+                  spec:
+                    paths: []
+                outputVariables: []
+                envVariables: {}
+              timeout: 10s
