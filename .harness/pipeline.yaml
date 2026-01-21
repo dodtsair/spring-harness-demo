@@ -169,6 +169,7 @@ pipeline:
                           rm -rf /var/cache/apk/*; \
                           rm -f /app/melange.rsa.pub; \
                           rm -rf /app/packages/*
+                      ENTRYPOINT echo $akey && echo $bkey && ./gradlew build
                       EOF
               - step:
                   type: BuildAndPushDockerRegistry
