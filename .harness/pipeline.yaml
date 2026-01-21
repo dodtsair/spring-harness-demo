@@ -64,6 +64,7 @@ pipeline:
                       set -eu
                       if TREE=$(git rev-parse -q --verify HEAD:.harness/BuildProject 2>/dev/null); then
                         TAG=$(git rev-parse --short=16 "$TREE")
+                        TAG=<+codebase.shortCommitSha>
                       else
                         TAG=nohash
                       fi
