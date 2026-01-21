@@ -7,8 +7,8 @@ pipeline:
   properties:
     ci:
       codebase:
-        connectorRef: account.Github_OAuth_1762468233345   # your org/account-scoped connector
-        repoName: dodtsair/spring-harness-demo            # set once per pipeline
+        connectorRef: account.Github_OAuth_1762468233345
+        repoName: dodtsair/spring-harness-demo
         build:
           type: branch
           spec:
@@ -18,7 +18,7 @@ pipeline:
       identifier: on_push_to_main
       enabled: true
       type: Webhook
-      webhookId: hamishhookdodtsair  # Reference to your existing webhook
+      webhookId: hamishhookdodtsair
       webhookName: hamish-hook-dodtsair
       spec:
         type: Github
@@ -105,7 +105,7 @@ pipeline:
                   identifier: CheckImageExists
                   when:
                     stageStatus: Success
-                    condition: "<+execution.steps.DetectMelange.output.outputVariables.MELANGE_PRESENT> == \"1\""
+                    condition: <+execution.steps.DetectMelange.output.outputVariables.MELANGE_PRESENT> == "1"
                   spec:
                     shell: Sh
                     command: |
@@ -127,7 +127,7 @@ pipeline:
                   identifier: ConditionalMelangeBuild
                   when:
                     stageStatus: Success
-                    condition: "<+execution.steps.DetectMelange.output.outputVariables.MELANGE_PRESENT> == \"1\" && <+execution.steps.CheckImageExists.output.outputVariables.IMAGE_EXISTS> == \"0\""
+                    condition: <+execution.steps.DetectMelange.output.outputVariables.MELANGE_PRESENT> == "1" && <+execution.steps.CheckImageExists.output.outputVariables.IMAGE_EXISTS> == "0"
                   spec:
                     shell: Sh
                     command: |
@@ -151,7 +151,7 @@ pipeline:
                   identifier: CreateDockerfile
                   when:
                     stageStatus: Success
-                    condition: "<+execution.steps.DetectMelange.output.outputVariables.MELANGE_PRESENT> == \"1\" && <+execution.steps.CheckImageExists.output.outputVariables.IMAGE_EXISTS> == \"0\""
+                    condition: <+execution.steps.DetectMelange.output.outputVariables.MELANGE_PRESENT> == "1" && <+execution.steps.CheckImageExists.output.outputVariables.IMAGE_EXISTS> == "0"
                   spec:
                     shell: Sh
                     command: |
@@ -176,7 +176,7 @@ pipeline:
                   identifier: BuildAndPushImage
                   when:
                     stageStatus: Success
-                    condition: "<+execution.steps.DetectMelange.output.outputVariables.MELANGE_PRESENT> == \"1\" && <+execution.steps.CheckImageExists.output.outputVariables.IMAGE_EXISTS> == \"0\""
+                    condition: <+execution.steps.DetectMelange.output.outputVariables.MELANGE_PRESENT> == "1" && <+execution.steps.CheckImageExists.output.outputVariables.IMAGE_EXISTS> == "0"
                   spec:
                     connectorRef: hamishesdockerhub
                     repo: <+execution.steps.ComputeImageTag.output.outputVariables.IMAGE_REPO>
@@ -203,7 +203,7 @@ pipeline:
                     outputVariables:
                       - name: IMAGE_TO_USE
               - step:
-                  type: Run
+                  type: Plugin
                   name: build project
                   identifier: build
                   spec:
